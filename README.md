@@ -1,6 +1,6 @@
 # jsn
 
-**jsn** (pronunciation: json) - an absolutely simple & terse CLI app to manipulate JSON data. You either learn to use it in less than 10 minutes, or I failed.
+**jsn** - an absolutely simple & terse CLI app to manipulate JSON data.
 
 Goals:
 
@@ -164,8 +164,6 @@ Or...
 jsn s '.**.foo' 'false'
 ```
 
-Much more elegant, right?
-
 ### Commands cheatsheet
 
 | name | arguments            | action                                                        | reversed variant
@@ -187,10 +185,6 @@ Much more elegant, right?
 
 ### Gotchas
 
-#### No path matched our path pattern
-
-If one or more members matches `PATH` pattern, the command action will be performed on every matched member - starting from the deepest ones. If `PATH` doesn't match anything, you will get an error (a sane default, right?). How to disable it? Use `-z` flag which stands for: **z**ero paths matched allowed. So, what you will get with a `-z` flag enabled and 0 paths matched? Naturally, output will be the same as input.
-
 #### Tolerant mode
 
 It can happen, that some paths matched don't make sense for your command and generate an error. For example, concatenation command `jsn c '*' '[1, 2, 3]'` will fail for this input:
@@ -211,152 +205,11 @@ While member at path `.a` is an array, member at path `.b` clearly isn't. What i
 }
 ```
 
-#### Get command (`g`)
-
-Every command shares the same output format. The only exception is a **g**et command (`g`). If the `PATH` pattern matches zero or one path, then it's quite the same. What happens if it matches many members, though? The answer is: it will write multiple outputs. While it **can** be useful to use with other apps, it's impossible to pipe it through jsn itself - jsn always expects one input. That's why you can use an `-a` flag, which stands for "**a**rray output". All the outputs will be combined to one array of JSON values - which is a valid JSON value. Voila!
-
-#### New command (`n`)
-
-`n` command is quite unique. It's behaviour is simple: do what set command (`s`) does, but accept a case where there is no such a member yet.
-
-Consider an input:
-
-```json
-{
-  "list": [1, 1, 2, 3]
-}
-```
-
-So, while both `jsn s '.list.0' '0'` and `jsn n '.list.0' '0'` will produce:
-
-```json
-{
-  "list": [0, 1, 2, 3]
-}
-```
-
-A command `jsn s '.list.4' '4'` will simply fail - there is no such a member. Command `jsn n '.list.4' '4'` will do just fine, though:
-
-```json
-{
-  "list": [0, 1, 2, 3, 4]
-}
-```
-
-#### Filter command (`f`)
-
-`f` command accepts `KEYS` argument to filter... members of a member. This doesn't sound like a straightforward thing, even though it really is. Suppose we have this input:
-
-```json
-{
-  "data": {
-    "a": 1,
-    "b": 2,
-    "c": 3
-  }
-}
-```
-
-If we run `jsn f '.data' 'a,b'` we get in return:
-
-```json
-{
-  "data": {
-    "a": 1,
-    "b": 2
-  }
-}
-```
-
-And the reversed variant: `jsn F '.data' 'a,b'`? Couldn't be any more obvious:
-
-```json
-{
-  "data": {
-    "c": 3
-  }
-}
-```
-
-You can either separate keys by a comma, or just use multiple arguments. Heck, you can even do both: `jsn F '.data' 'key1,key2' 'key3' 'key4'`!
-
-#### "I only want the modified part"
-
-Every jsn command will always return the modified root member of input as output. Such a consistency is great, but very often it can be counter intuitive. Consider such a file:
-
-```json
-{
-  "numbers": [1, 2, 3],
-  "otherData": "foobar"
-}
-```
-
-What's the output of the command: `jsn t '.numbers' 2`? It is:
-
-```json
-{
-  "numbers": [2, 3],
-  "otherData": "foobar"
-}
-```
-
-"What?! But I've literally asked to **take 2 elements**, nothing else!".
-
-I see your point! To use jsn commands like this, just apply `-m` flag, which stands for a "**m**odified part". This way, a command `jsn t 'numbers' 2 -m` would give us:
-
-```json
-[2, 3]
-```
-
-It even works with wildcards matching multiple paths. Although, you need to be aware that paths are always matched starting from the deepest members and in such an order all the operations are performed. So what you eventually get is the outermost modified member.
-
-#### Those boring edge cases
-
-Sometimes, out of insanity, people will be tempted to use JSON standard to the highest extent and use the following characters for their keys:
-
-- empty string (`''`)
-- dots (`.`)
-- stars (`*`)
-
-While it's far from being a popular practise, **jsn does support it**. To not collide with other features, you simply need to apply an escape operator (`\`). So, to access the deepest member in input like:
-
-```json
-"**": {
-  "": {
-    ".\\": true
-  }
-}
-```
-
-One has to create such a path:
-
-```none
-.\*\*..\.\\
-```
-
-Which is not the most readable line of code ever, but people used to regular expression will surely not mind :) .
-
----
-
-And that's the entire jsn API. I hope that reading this didn't take you much more than the promised 10 minutes!
-
 ### Pretty print
 
 By default, every output will be pretty printed. If you want to change the **w**hitespace characters used for indentation (default: 2 spaces), use `-w SPACES` option, where `SPACES` is the amount of spaces. If you want tabs, simply use `'t'` value.
 
 If you want to disable pretty printing, just use the `-u` (**u**gly) flag.
-
-## Why is it so terse?
-
-And why is vim so terse with its commands? Because **small tasks require small amount of time spent on them**. Way too often I need to perform a quick JSON modification, which turns out to be **not so quick** at all.
-
-I struggle. No trailing commas allowed - oh, what a shame. I can not just omit double quotes like in JavaScript? Not so great. Oh, I need to copy and paste values here and there, because there is no simpler way for it. **My frustration has led me to creating jsn**.
-
-If you really dislike this convention, simply `alias` everything.
-
-## Contributions
-
-Are welcome in any form. Share your bugs, ideas, pull requests. Add tests or refactor the code. Thank you very much for your attention, you're the best ;) .
 
 ## Alternatives
 
@@ -367,7 +220,7 @@ Almost every other tool built for JSON manipulations does so much more. jsn was 
 
 ## TODO
 
-Add tests. Add benchmarks to measure and improve perf.
+Add tests.
 
 ## License
 
